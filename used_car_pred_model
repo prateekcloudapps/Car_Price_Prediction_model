@@ -1,0 +1,154 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+#Read dataset
+df_car = pd.read_csv('Car_Dataset_2.csv')
+
+#head info
+df_car.info()
+df_car
+
+#describe columns
+df_car.describe()
+
+#Heat Map
+import seaborn as sns
+sns.heatmap(df_car.corr(), annot=True, cmap='coolwarm')
+plt.show()
+
+#Bar plot for Seller Type vs Selling Price
+fig, (axis1,axis2) = plt.subplots(1, 2, figsize = (20,5))
+sns.countplot(x="seller_type", data=df_car, ax=axis1)
+sns.barplot(x="seller_type", y="selling_price",data=df_car, ax=axis2 )
+
+#Bar plot for Owner vs Selling Price
+fig, (axis1,axis2)=plt.subplots(1,2,figsize=(20,5))
+sns.countplot(x="owner",data=df_car,ax=axis1)
+sns.barplot(x="owner",y="selling_price",data=df_car,ax=axis2)
+
+#Bar plot for Transmission type vs Selling Price
+fig, (axis1,axis2)=plt.subplots(1,2,figsize=(20,5))
+sns.countplot(x="transmission",data=df_car,ax=axis1)
+sns.barplot(x="transmission",y="selling_price",data=df_car,ax=axis2)
+
+#Scatterplot comparing Km_driven vs Selling Price
+sns.scatterplot(data=df_car,x="km_driven",y="selling_price")
+
+#Line Graph for Age vs Selling Price
+df_car["Age"] = 2022-df_car["year"]
+df_car["selling_price"] = df_car["Selling_price"]
+sns.lineplot(data=df_car,x="Age",y="selling_price")
+
+#Bar plot for Fuel Type vs Selling Price
+sns.barplot(data=df_car,x="fuel",y="selling_price")
+
+#Bar Plot for Fuel Type of cars in dataset
+sns.countplot(data=df_car,x="fuel")
+
+#Bar Graph for Seller_type, Owner, Transmission vs Selling Price
+df_seller_owner = df_car.groupby(by=["seller_type","owner","transmission"])
+df_seller_owner.count().sort_values(by="selling_price", ascending=False).plot(kind="bar", y="selling_price")
+
+#Splitting the dataset
+df_car = df_car.drop(["Selling_price"], axis = 1)
+X = df_car.iloc[:, :-1].values
+X_age = df_car.iloc[:, 7].values
+X_km = df_car.iloc[:, 2].values
+y = df_car.iloc[:, -1].values
+
+
+# Linear Regression for Age vs Selling Price
+# Splitting the dataset into the Training set and Test set
+from sklearn.model_selection import train_test_split
+X_age_train, X_age_test, y_age_train, y_age_test = train_test_split(X_age, y, test_size = 1/3, random_state = 0)
+X_age_train = X_age_train.reshape(-1, 1)
+y_age_train = y_age_train.reshape(-1, 1)
+X_age_test = X_age_test.reshape(-1, 1)
+
+# Training the Simple Linear Regression model on the Training set
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+regressor.fit(X_age_train, y_age_train)
+
+# Predicting the Test set results
+y_age_pred = regressor.predict(X_age_test)
+
+# Visualising the Training set results
+plt.scatter(X_age_train, y_age_train, color = 'red')
+plt.plot(X_age_train, regressor.predict(X_age_train), color = 'blue')
+plt.title('Selling Price vs Age of Vehicle (Training set)')
+plt.xlabel('Age of Vehicle')
+plt.ylabel('Selling Price')
+plt.show()
+
+# Visualising the Test set results
+plt.scatter(X_age_test, y_age_test, color = 'red')
+plt.plot(X_age_train, regressor.predict(X_age_train), color = 'blue')
+plt.title('Selling Price vs Age of Vehicle (Test set)')
+plt.xlabel('Age of Vehicle')
+plt.ylabel('Selling Price')
+plt.show()
+
+
+# Linear Regression for Km Travelled vs Selling Price
+# Splitting the dataset into the Training set and Test set
+from sklearn.model_selection import train_test_split
+X_km_train, X_km_test, y_km_train, y_km_test = train_test_split(X_km, y, test_size = 1/3, random_state = 0)
+X_km_train = X_km_train.reshape(-1, 1)
+y_km_train = y_km_train.reshape(-1, 1)
+X_km_test = X_km_test.reshape(-1, 1)
+
+# Training the Simple Linear Regression model on the Training set
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+regressor.fit(X_km_train, y_km_train)
+
+# Predicting the Test set results
+y_km_pred = regressor.predict(X_km_test)
+
+# Visualising the Training set results
+plt.scatter(X_km_train, y_km_train, color = 'red')
+plt.plot(X_km_train, regressor.predict(X_km_train), color = 'blue')
+plt.title('Selling Price vs Kms Travelled (Training set)')
+plt.xlabel('Kms Travelled')
+plt.ylabel('Selling Price')
+plt.show()
+
+# Visualising the Test set results
+plt.scatter(X_km_test, y_km_test, color = 'red')
+plt.plot(X_km_train, regressor.predict(X_km_train), color = 'blue')
+plt.title('Selling Price vs Kms Travelled (Test set)')
+plt.xlabel('Kms Travelled')
+plt.ylabel('Selling Price')
+plt.show()
+
+
+#Multiple Linear Regression
+# One Hot Encoding categorical data
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(), [0])], remainder='passthrough')
+ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(), [3])], remainder='passthrough')
+ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(), [4])], remainder='passthrough')
+ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(), [5])], remainder='passthrough')
+ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(), [6])], remainder='passthrough')
+#X_multi = np.array(ct.fit_transform(X))
+X_multi = ct.fit_transform(X).toarray()
+print(X_multi)
+
+# Splitting the dataset into the Training set and Test set
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X_multi, y, test_size = 0.2, random_state = 0)
+
+# Training the Multiple Linear Regression model on the Training set
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+regressor.fit(X_train, y_train)
+
+# Predicting the Test set results
+y_pred = regressor.predict(X_test)
+np.set_printoptions(precision=2)
+print(np.concatenate((y_pred.reshape(len(y_pred),1), y_test.reshape(len(y_test),1)),1))
+
